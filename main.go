@@ -7,7 +7,7 @@ import (
 	// "net"
 	"log"
 	// "os"
-	
+	"bufio"
 )
 
 var host *string = flag.String("host", "", "IRC Host")
@@ -20,10 +20,11 @@ func main() {
 		log.Exit("Unable to dial IRC server", err)
 	}
 	
-	buf := make([]byte, 4096)
-	read, err := conn.Read(buf)
-	fmt.Println("read", read, buf[0:read])
+	reader := bufio.NewReader(conn)
+
+	line, err := reader.ReadString('\n')
 	if err != nil {
 		log.Exit("Unable to read from IRC", err)
 	}
+	fmt.Printf(line)
 }
