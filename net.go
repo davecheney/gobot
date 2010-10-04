@@ -5,9 +5,7 @@ import (
 	"crypto/tls"
 	"os"
 	"io"
-	"bufio"
 	"time"
-	// "fmt"
 )
 
 func dialIRC(host string, port int) (*net.TCPConn, os.Error) {
@@ -83,29 +81,4 @@ func dialIRCTLS(host string, port int) (c *tls.Conn, err os.Error) {
     }
 	c.Close()
     return nil, err
-}
-
-func makeReaderChannel(reader *bufio.Reader) chan string {
-	c := make(chan string)
-	go func() {
-		for {
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				return
-			}
-			c <- line
-		}
-	}()
-	return c
-}
-
-func connect(host string, port int) (chan string, chan string, os.Error) {
-	conn, err := dialIRCTLS(host, port)
-	if err != nil {
-		return nil, nil, err
-	}
-	reader := bufio.NewReader(conn)
-	// writer := bufio.NewWriter(conn)
-	
-	return makeReaderChannel(reader), nil, nil
 }

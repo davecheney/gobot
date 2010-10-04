@@ -11,18 +11,22 @@ import (
 )
 
 var host *string = flag.String("host", "", "IRC Host")
-
+var user *string = flag.String("user", "", "USER")
+var nick *string = flag.String("nick", "gobot", "NICK")
+var pass *string = flag.String("pass", "", "PASS")
 
 
 func main() {
 	flag.Parse()
-	r, _, err := connect(*host, 6669)
+	irc, err := connect(*host, 6669)
 	if err != nil {
 		log.Exit("Unable to read from IRC", err)
 	}
 	
+	irc.Writer <- "PASS "+*pass+"\r\nUSER "+*user+" foo foo :gobot\r\nNICK gobot\r\n"
+	
 	for {
-		line := <- r
+		line := <- irc.Reader
 		fmt.Printf(line)
 	}
 
