@@ -13,7 +13,7 @@ type IRCWriter chan string
 type IRCReader chan string
 
 type IRC struct {
- 	Reader chan string
+ 	Reader IRCReader
 	Writer IRCWriter
 }
 
@@ -39,7 +39,7 @@ func newIRC(c net.Conn) (irc *IRC) {
 			if err != nil {
 				log.Exit("Unable to read from channel", err)
 			}
-			log.Stdoutf("Read: [%s]", line)
+			log.Stdoutf("Read: %#v", line)
 			irc.Reader <- line
 		}
 	}(bufio.NewReader(c))
@@ -48,7 +48,6 @@ func newIRC(c net.Conn) (irc *IRC) {
 	go func(w *bufio.Writer) {
 		for {
 			line := <- irc.Writer
-			log.Stdout(line)
 			_, err := w.WriteString(line)
 			if err != nil {
 				log.Exit("Unable to write to channel", err)
@@ -57,7 +56,7 @@ func newIRC(c net.Conn) (irc *IRC) {
 			if err != nil {
 				log.Exit("Unable to write to channel", err)
 			}
-			log.Stdoutf("Wrote: [%s]", line)
+			log.Stdoutf("Wrote: %#v", line)
 		}
 	}(bufio.NewWriter(c))
 

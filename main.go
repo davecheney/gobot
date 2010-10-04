@@ -2,12 +2,7 @@ package main
 
 import (
 	"flag"
-	// "fmt"
-	
-	// "net"
 	"log"
-	// "os"
-	// "bufio"
 )
 
 var host *string = flag.String("host", "", "IRC Host")
