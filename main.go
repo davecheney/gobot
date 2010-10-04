@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	// "fmt"
 	
 	// "net"
 	"log"
@@ -11,23 +11,23 @@ import (
 )
 
 var host *string = flag.String("host", "", "IRC Host")
+var port *int = flag.Int("port", 6669, "IRC Port")
 var user *string = flag.String("user", "", "USER")
 var nick *string = flag.String("nick", "gobot", "NICK")
 var pass *string = flag.String("pass", "", "PASS")
 
-
 func main() {
 	flag.Parse()
-	irc, err := connect(*host, 6669)
+	irc, err := connectTLS(*host, *port)
 	if err != nil {
 		log.Exit("Unable to read from IRC", err)
 	}
 	
-	irc.Writer <- "PASS "+*pass+"\r\nUSER "+*user+" foo foo :gobot\r\nNICK gobot\r\n"
+	irc.Writer.Printf("PASS %s\r\nUSER %s foo foo :gobot\r\nNICK gobot\r\n", *pass, *user)
+
+	bot := &Bot{"#bacon"}
 	
 	for {
-		line := <- irc.Reader
-		fmt.Printf(line)
+		bot.Accept( <- irc.Reader, irc.Writer)
 	}
-
 }

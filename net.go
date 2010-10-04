@@ -4,7 +4,7 @@ import (
 	"net"
 	"crypto/tls"
 	"os"
-	"io"
+	"io/ioutil"
 	"time"
 )
 
@@ -27,25 +27,15 @@ func loadRootCA(file string) (*tls.CASet, os.Error) {
 	if caset.SetFromPEM(pemBytes) {
 		return caset, nil
 	}
-	return nil, os.NewError("Unable to decode root ca set")
+	return nil, os.NewError("Unable to decode root CA set")
 }
 
 func readFile(name string) ([]byte, os.Error) { 
-       file, err := os.Open(name, os.O_RDONLY, 0); 
-       if err != nil { 
-       return nil, err; 
-       } 
-       stat, err := file.Stat(); 
-       if err != nil { 
-       return nil, err; 
-       } 
-       contents := make([]byte, stat.Size); 
-       _, err = io.ReadFull(file, contents); 
-       if err != nil { 
-       return nil, err; 
-       } 
-       file.Close(); 
-       return contents, nil; 
+	contents, err := ioutil.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+	return contents, nil; 
 }
 
 func newConfig() (*tls.Config, os.Error) {
@@ -68,7 +58,10 @@ func newConfig() (*tls.Config, os.Error) {
 
 func dialIRCTLS(host string, port int) (c *tls.Conn, err os.Error) {
 	remote, err := dialIRC(host, port)
-
+	if err != nil {
+		return nil, err
+	}
+	
 	config, err := newConfig()
 	if err != nil {
 		return nil, err
