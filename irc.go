@@ -57,7 +57,6 @@ func newIRC(c net.Conn) (irc *IRC) {
 			if err != nil {
 				log.Exit("Unable to write to channel", err)
 			}
-
 			log.Stdoutf("Wrote: [%s]", line)
 		}
 	}(bufio.NewWriter(c))
