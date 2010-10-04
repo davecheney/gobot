@@ -4,45 +4,52 @@ import (
 	"log"
 	"bufio"
 	"os"
+	"crypto/tls"
 )
 
 type IRCChannel struct {
+	reader *bufio.Reader
+	writer *bufio.Writer
 	Reader chan string
 	Writer chan string
 }
 
-func makeReaderChannel(reader *bufio.Reader) chan string {
-	c := make(chan string)
-	go func() {
-		for {
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				log.Exit("Unable to read from channel", err)
-			}
-			c <- line
+func (irc *IRCChannel) startReader() {
+	for {
+		line, err := irc.reader.ReadString('\n')
+		if err != nil {
+			log.Exit("Unable to read from channel", err)
 		}
-	}()
-	return c
+		irc.Reader <- line
+	}
 }
 
-func makeWriterChannel(writer *bufio.Writer) chan string {
-	c := make(chan string, 10)
-	go func() {
-		for {
-			line := <- c
-			log.Stdout(line)
-			count, err := writer.WriteString(line)
-			if err != nil {
-				log.Exit("Unable to write to channel", err)
-			}
-			err = writer.Flush()
-			if err != nil {
-				log.Exit("Unable to write to channel", err)
-			}
-			
-			log.Stdout("wrote", count)
+func (irc *IRCChannel) startWriter() {
+	for {
+		line := <- irc.Writer
+		log.Stdout(line)
+		count, err := irc.writer.WriteString(line)
+		if err != nil {
+			log.Exit("Unable to write to channel", err)
 		}
-	}()
+		err = irc.writer.Flush()
+		if err != nil {
+			log.Exit("Unable to write to channel", err)
+		}
+		
+		log.Stdout("wrote", count)
+	}
+}
+
+func newIRCChannel(conn *tls.Conn) *IRCChannel {
+	c := &IRCChannel{
+		reader: bufio.NewReader(conn),
+		writer: bufio.NewWriter(conn),
+		Reader: make(chan string, 10),
+		Writer: make(chan string, 10),
+	}
+	go c.startReader()
+	go c.startWriter()
 	return c
 }
 
@@ -51,8 +58,5 @@ func connect(host string, port int) (*IRCChannel, os.Error) {
 	if err != nil {
 		return nil, err
 	}
-	reader := bufio.NewReader(conn)
-	writer := bufio.NewWriter(conn)
-	
-	return &IRCChannel{makeReaderChannel(reader), makeWriterChannel(writer)}, nil
+	return newIRCChannel(conn), nil
 }
